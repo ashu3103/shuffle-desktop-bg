@@ -2,9 +2,9 @@ from abc import ABC, abstractmethod
 
 class Handler:
     @abstractmethod
-    def emit(record: str):
+    def emit(self, record: str):
         pass
 
     @abstractmethod
-    def close():
+    def close(self):
         pass

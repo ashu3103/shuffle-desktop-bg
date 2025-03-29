@@ -1,9 +1,10 @@
 import os
-from handler import *
+from .handler import *
 
 class FileHandler(Handler):
-    def __init__(self, filename:str, mode:chr='a', delay:bool=False) -> Exception:
+    def __init__(self, filename:str, mode:chr='a', terminator:chr='\n', delay:bool=False) -> Exception:
         self.filename = filename
+        self.terminator = terminator
         self.mode = mode
         self.delay = delay
         try:
@@ -28,7 +29,7 @@ class FileHandler(Handler):
                 raise Exception("File not opened")
             
             ## everything is okay, write the record
-            self.file.write(record)
+            self.file.write(f'{record}{self.terminator}')
         except (FileNotFoundError):
             print(f'File {self.filename} doesn\'t exist')
         except Exception as e:
