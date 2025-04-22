@@ -1,9 +1,10 @@
 from enum import Enum
 import datetime
-from .handlers.null import *
-from .handlers.file import *
-from .handlers.stream import *
-from .handlers.handler import *
+from src.handlers.null import *
+from src.handlers.file import *
+from src.handlers.stream import *
+from src.handlers.handler import *
+from src.decorators.singleton import *
 
 class LogLevel(Enum):
     INFO = 1
@@ -27,6 +28,7 @@ def defaultFileFormat(logLevel: LogLevel, message:str) -> str:
     timeNow = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     return f'{timeNow}  {logLevel.name}  {message}'
 
+@singleton
 class Logger:
     # Default log level is info
     def __init__(self, level=LogLevel.INFO):

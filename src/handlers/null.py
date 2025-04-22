@@ -1,4 +1,4 @@
-from .handler import *
+from src.handlers.handler import *
 
 class NullHandler(Handler):
     def __init__(self, *args, **kwargs):

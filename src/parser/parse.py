@@ -1,7 +1,7 @@
 import re
 from enum import Enum
 from typing import List
-from .flag import *
+from src.parser.options import *
 
 class Action(Enum):
     NOOP: 0
