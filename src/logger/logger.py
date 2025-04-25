@@ -1,10 +1,10 @@
 from enum import Enum
 import datetime
-from src.handlers.null import *
-from src.handlers.file import *
-from src.handlers.stream import *
-from src.handlers.handler import *
-from src.decorators.singleton import *
+from handlers.null import *
+from handlers.file import *
+from handlers.stream import *
+from handlers.handler import *
+from decorators.singleton import *
 
 class LogLevel(Enum):
     INFO = 1

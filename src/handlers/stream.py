@@ -1,5 +1,5 @@
 import sys
-from src.handlers.handler import *
+from handlers.handler import *
 
 class StreamHandler(Handler):
     def __init__(self, flsh:bool=False) -> Exception:

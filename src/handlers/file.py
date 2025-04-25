@@ -1,5 +1,5 @@
 import os
-from src.handlers.handler import *
+from handlers.handler import *
 
 class FileHandler(Handler):
     def __init__(self, filename:str, mode:chr='a', terminator:chr='\n', delay:bool=False) -> Exception:

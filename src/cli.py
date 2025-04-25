@@ -1,6 +1,6 @@
 import os
 import sys
-from logger.logger import *
+from .logger.logger import *
 
 def usage():
     pass
