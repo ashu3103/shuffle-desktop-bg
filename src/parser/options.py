@@ -26,8 +26,8 @@ class OptionParameter:
 
     def __str__(self):
         if (not self.is_flag and self.is_valid):
-            return f'isValid: {self.is_valid}, isRequired: {self.is_required}, isFlag: {self.is_flag}, argument: {self.argument_value}'
-        return f'isValid: {self.is_valid}, isRequired: {self.is_required}, isFlag: {self.is_flag}'
+            return f'({self.is_valid}, {self.is_required}, {self.is_flag}, {self.argument_value})'
+        return f'({self.is_valid}, {self.is_required}, {self.is_flag})'
 
     def optionSetValid(self, valid: bool):
         self.is_valid = valid
@@ -52,6 +52,8 @@ class OptionResult:
     def __init__(self, key: str, value: OptionParameter):
         self.key = key
         self.value = value
+    def __str__(self):
+        print(f'({self.key}, {self.value.__str__()})')
 
 def is_option(a: str) -> bool:
     if (a.startswith('-') or a.startswith('--')): return True
@@ -64,7 +66,7 @@ class OptionParser:
     __long_name_map = {}
 
     __option_parameter_pool: List[OptionParameter] = []
-    __result = []
+    __result: List[OptionResult] = []
 
     #
     # Initialize a parser with a set of config rules
@@ -107,39 +109,44 @@ class OptionParser:
             flag = ""
             while(curr_index < len(options)):
                 option = options[curr_index]
+                print(f"DEBUG__option: {option}")
                 if (option.startswith('-')):
                     assert (len(option)==2)
                     flag = option[1]
                     print(f"DEBUG___flag: {flag}")
                     if (self.__short_name_map.__contains__(flag)):
-                        option_parameter: OptionParameter = self.__short_name_map[flag]
+                        option_parameter: OptionParameter = self.__option_parameter_pool[self.__short_name_map[flag]]
                         if (option_parameter.optionGetValid()):  ## if already a flag was detected ignore it
                             return -1
                         
-                        if (not option_parameter.optionIsFlag):
+                        if (not option_parameter.optionIsFlag()):
                             curr_index = curr_index + 1
-                            assert (not is_option(options[curr_index]))
+                            if (curr_index >= len(options) or is_option(options[curr_index])):
+                                print(f"Argument is required for -{flag}")
+                                return -1
                             option_parameter.optionSetArgumentValue(options[curr_index])
                         option_parameter.optionSetValid(True)
                     else:
+                        print(f"DEBUG___flag: {flag} not present")
                         return -1
+                    
                 elif (option.startswith('--')):
                     flag = option.split('=')[0].split('--')[1]
                     print(f"DEBUG___flag: {flag}")
                     if (self.__long_name_map.__contains__(flag)):
-                        option_parameter: OptionParameter = self.__long_name_map[flag]
+                        option_parameter: OptionParameter = self.__option_parameter_pool[self.__long_name_map[flag]]
                         if (option_parameter.optionGetValid()):  ## if already a flag was detected ignore it
                             return -1
                         
-                        if (not option_parameter.optionIsFlag):
+                        if (not option_parameter.optionIsFlag()):
                             argument = option.split('=')[1]
                             option_parameter.optionSetArgumentValue(argument)
                         option_parameter.optionSetValid(True)
                     else:
+                        print(f"DEBUG___flag: {flag} not present")
                         return -1
                 ## base case
                 else:
-                    curr_index = curr_index + 1
                     break
 
                 ## Populate result
@@ -153,8 +160,8 @@ class OptionParser:
                 curr_index = curr_index + 1
 
             for op in self.__option_parameter_pool:
-                if (op.optionIsRequired() and (not op.optionGetValid())):
-                    print(f'')
+                if (op.is_required and not op.is_valid):
+                    print(f'Some keys are required but not present')
                     return -1
             return curr_index
         except AssertionError as e:
@@ -164,11 +171,11 @@ class OptionParser:
     ## For development purpose only TODO: Remove it
     def printShortMap(self):
         for key, value in self.__short_name_map.items():
-            print(f'Key: {key}, Value: "{self.__option_parameter_pool[value].__str__()}"')
+            print(f'Key: {key}, Value: {self.__option_parameter_pool[value].__str__()}')
     
     def printLongMap(self):
         for key, value in self.__long_name_map.items():
-            print(f'Key: {key}, Value: "{self.__option_parameter_pool[value].__str__()}"')
+            print(f'Key: {key}, Value: {self.__option_parameter_pool[value].__str__()}')
 
     def optionParserGetResult(self):
         return self.__result
