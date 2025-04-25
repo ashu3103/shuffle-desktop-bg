@@ -55,9 +55,20 @@ class OptionResult:
     def __str__(self):
         print(f'({self.key}, {self.value.__str__()})')
 
+
+### Helper functions
 def is_option(a: str) -> bool:
     if (a.startswith('-') or a.startswith('--')): return True
     return False
+
+def extract_flag_arg(s: str) -> List:
+    flag = None
+    arg = None
+    l = s.split('=')
+    if (len(l) >= 2):
+        arg = l[1]
+    flag = l[0].split('--')[1]
+    return [flag, arg]
 
 ## Ensure only one instance of this parser class in the project
 @singleton
@@ -102,7 +113,6 @@ class OptionParser:
     def optionParserDoParse(self, options: List[str]) -> int:
         try:
             curr_index = 0
-
             ## Priority based results flag have higher priority than non-flags/argument options
             result_flag_index = 0
             result_non_flag_index = 0
@@ -110,7 +120,24 @@ class OptionParser:
             while(curr_index < len(options)):
                 option = options[curr_index]
                 print(f"DEBUG__option: {option}")
-                if (option.startswith('-')):
+                if (option.startswith('--')):
+                    flag, argument = extract_flag_arg(options[curr_index])
+                    print(f"DEBUG___flag: {flag}")
+                    if (self.__long_name_map.__contains__(flag)):
+                        option_parameter: OptionParameter = self.__option_parameter_pool[self.__long_name_map[flag]]
+                        if (option_parameter.optionGetValid()):  ## if already a flag was detected ignore it
+                            return -1
+                        
+                        if (not option_parameter.optionIsFlag()):
+                            if not argument:
+                                print(f"Argument is required for --{flag}")
+                                return -1
+                            option_parameter.optionSetArgumentValue(argument)
+                        option_parameter.optionSetValid(True)
+                    else:
+                        print(f"DEBUG___flag: {flag} not present")
+                        return -1
+                elif (option.startswith('-')):
                     assert (len(option)==2)
                     flag = option[1]
                     print(f"DEBUG___flag: {flag}")
@@ -125,22 +152,6 @@ class OptionParser:
                                 print(f"Argument is required for -{flag}")
                                 return -1
                             option_parameter.optionSetArgumentValue(options[curr_index])
-                        option_parameter.optionSetValid(True)
-                    else:
-                        print(f"DEBUG___flag: {flag} not present")
-                        return -1
-                    
-                elif (option.startswith('--')):
-                    flag = option.split('=')[0].split('--')[1]
-                    print(f"DEBUG___flag: {flag}")
-                    if (self.__long_name_map.__contains__(flag)):
-                        option_parameter: OptionParameter = self.__option_parameter_pool[self.__long_name_map[flag]]
-                        if (option_parameter.optionGetValid()):  ## if already a flag was detected ignore it
-                            return -1
-                        
-                        if (not option_parameter.optionIsFlag()):
-                            argument = option.split('=')[1]
-                            option_parameter.optionSetArgumentValue(argument)
                         option_parameter.optionSetValid(True)
                     else:
                         print(f"DEBUG___flag: {flag} not present")
