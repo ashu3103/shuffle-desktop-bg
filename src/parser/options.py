@@ -1,8 +1,6 @@
-import re
 from typing import List
 from decorators.singleton import singleton
-
-FLAG_EXPRESSION_PATTERN = r"^-"
+from logger.logger import *
 
 #
 # Format of options stored
@@ -13,7 +11,6 @@ cli_options = [
     ["V", "version", False, True],
     ["", "logfile", False, False],
     ["", "log-level", False, False],
-    ["c", "config", True, False]   ## Temporary for testing
 ]
 
 class OptionParameter:
@@ -79,8 +76,13 @@ class OptionParser:
     __option_parameter_pool: List[OptionParameter] = []
     __result: List[OptionResult] = []
 
+    def __init__(self, logger: Logger):
+        self.logger = logger
     #
     # Initialize a parser with a set of config rules
+    # Config rules have a defined format given below:
+    # ( <short_name>, <long_name>, <is_required>, <is_flag> ), where <is_required> and <is_flag>
+    # are mandatory, if <short_name>/<long_name> are not applicable use empty-strings (only)
     #
     def optionParserLoadConfig(self, options_config):
         try:
@@ -108,7 +110,8 @@ class OptionParser:
 
     #
     # Parse the options of a command line, flags have more priority than argument options
-    # return the next index after parsing, -1 if unsuccess
+    # return the next index after parsing, -1 if unsuccess and maintain a result list for later 
+    # use
     #
     def optionParserDoParse(self, options: List[str]) -> int:
         try:
@@ -119,42 +122,42 @@ class OptionParser:
             flag = ""
             while(curr_index < len(options)):
                 option = options[curr_index]
-                print(f"DEBUG__option: {option}")
                 if (option.startswith('--')):
                     flag, argument = extract_flag_arg(options[curr_index])
                     print(f"DEBUG___flag: {flag}")
                     if (self.__long_name_map.__contains__(flag)):
                         option_parameter: OptionParameter = self.__option_parameter_pool[self.__long_name_map[flag]]
                         if (option_parameter.optionGetValid()):  ## if already a flag was detected ignore it
+                            self.logger.error(f"duplicate option: --{flag}")
                             return -1
                         
                         if (not option_parameter.optionIsFlag()):
                             if not argument:
-                                print(f"Argument is required for --{flag}")
+                                self.logger.error(f"Argument is required for --{flag}")
                                 return -1
                             option_parameter.optionSetArgumentValue(argument)
                         option_parameter.optionSetValid(True)
                     else:
-                        print(f"DEBUG___flag: {flag} not present")
+                        self.logger.error(f"--{flag} is not a valid option")
                         return -1
                 elif (option.startswith('-')):
                     assert (len(option)==2)
                     flag = option[1]
-                    print(f"DEBUG___flag: {flag}")
                     if (self.__short_name_map.__contains__(flag)):
                         option_parameter: OptionParameter = self.__option_parameter_pool[self.__short_name_map[flag]]
                         if (option_parameter.optionGetValid()):  ## if already a flag was detected ignore it
+                            self.logger.error(f"duplicate option: -{flag}")
                             return -1
                         
                         if (not option_parameter.optionIsFlag()):
                             curr_index = curr_index + 1
                             if (curr_index >= len(options) or is_option(options[curr_index])):
-                                print(f"Argument is required for -{flag}")
+                                self.logger.error(f"Argument is required for -{flag}")
                                 return -1
                             option_parameter.optionSetArgumentValue(options[curr_index])
                         option_parameter.optionSetValid(True)
                     else:
-                        print(f"DEBUG___flag: {flag} not present")
+                        self.logger.error(f"-{flag} is not a valid option")
                         return -1
                 ## base case
                 else:
@@ -172,23 +175,24 @@ class OptionParser:
 
             for op in self.__option_parameter_pool:
                 if (op.is_required and not op.is_valid):
-                    print(f'Some keys are required but not present')
+                    self.logger.error(f'Some flags are required but not present')
                     return -1
             return curr_index
         except AssertionError as e:
-            print(f"Assertion failed: {e}")
+            self.logger.error(f"Assertion failed: {e}")
             return -1
     
-    ## For development purpose only TODO: Remove it
+    ## For development purpose only TODO: Remove it ###################################################
     def printShortMap(self):
         for key, value in self.__short_name_map.items():
-            print(f'Key: {key}, Value: {self.__option_parameter_pool[value].__str__()}')
+            self.logger.debug(f'Key: {key}, Value: {self.__option_parameter_pool[value].__str__()}')
     
     def printLongMap(self):
         for key, value in self.__long_name_map.items():
-            print(f'Key: {key}, Value: {self.__option_parameter_pool[value].__str__()}')
+            self.logger.debug(f'Key: {key}, Value: {self.__option_parameter_pool[value].__str__()}')
+    ###################################################################################################
 
-    def optionParserGetResult(self):
+    def optionParserGetResult(self) -> List[OptionResult]:
         return self.__result
         
 

@@ -2,15 +2,23 @@ import re
 from enum import Enum
 from typing import List
 from parser.options import *
+from parser.commands import *
+from logger.logger import *
+from handlers import *
 
-option_parser = OptionParser()
-option_parser.optionParserLoadConfig(cli_options)
+cmd_list = ["-h", "-V", "--logfile=asd", "command"]
 
-# option_parser.printShortMap()
-option_parser.printLongMap()
+logger = Logger(level=LogLevel.DEBUG)
+logger.addHandler(logger.StreamHandler())
 
-ind = option_parser.optionParserDoParse(["--config=lk", "-h", "-c", "af"])
-print(ind)
-l = option_parser.optionParserGetResult()
-for x in l:
-    x.__str__()
+# option_parser = OptionParser(logger)
+# option_parser.optionParserLoadConfig(cli_options)
+
+# # option_parser.printShortMap()
+# option_parser.printLongMap()
+
+# ind = option_parser.optionParserDoParse(cmd_list)
+# print(ind)
+# l = option_parser.optionParserGetResult()
+# for x in l:
+#     x.__str__()
