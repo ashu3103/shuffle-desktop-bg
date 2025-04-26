@@ -1,4 +1,3 @@
-import re
 from enum import Enum
 from typing import List
 from parser.options import *
@@ -6,19 +5,22 @@ from parser.commands import *
 from logger.logger import *
 from handlers import *
 
-cmd_list = ["-h", "-V", "--logfile=asd", "command"]
+## Pass a copy of sys
+def parse(logger: Logger, input: List[str], option_config=cli_options, command_config=cli_commands):
+    ## Parse options first
+    option_parser = OptionParser(logger)
+    option_parser.optionParserLoadConfig(option_config)
 
-logger = Logger(level=LogLevel.DEBUG)
-logger.addHandler(logger.StreamHandler())
+    ind = option_parser.optionParserDoParse(input)
+    if (ind == -1):
+        return [None, None]
+    input = input[ind:]
 
-# option_parser = OptionParser(logger)
-# option_parser.optionParserLoadConfig(cli_options)
+    ## Parse command
+    command_parser = CommandParser(logger)
+    command_parser.commandParserLoadConfig(command_config)
+    ind = command_parser.commandParserDoParse(input)
+    if (ind == -1):
+        return [None, None]
 
-# # option_parser.printShortMap()
-# option_parser.printLongMap()
-
-# ind = option_parser.optionParserDoParse(cmd_list)
-# print(ind)
-# l = option_parser.optionParserGetResult()
-# for x in l:
-#     x.__str__()
+    return [option_parser.optionParserGetResult(), command_parser.commandParserGetResult()]
