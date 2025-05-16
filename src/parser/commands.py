@@ -38,8 +38,9 @@ cli_commands = [
 class CommandParser:
     __parsed_command: CommandResult = None
 
-    def __init__(self, logger: Logger):
-        self.logger = logger
+    def __init__(self):
+        pass
+        # self.logger = logger
 
     def commandParserLoadConfig(self, config: List[CommandEntity]):
         self.config = config
@@ -48,7 +49,7 @@ class CommandParser:
         curr_index = 0
         args = []
         if (len(input) == 0):
-            self.logger.error(f"No command speified")
+            print(f"No command speified")
             return -1
         command = input[curr_index]
         curr_index = curr_index + 1
@@ -60,7 +61,7 @@ class CommandParser:
                 break
             
         if (not entity):
-            self.logger.error(f"{command} is not a valid command")
+            print(f"{command} is not a valid command")
             return -1
         
         while curr_index < len(input):
@@ -68,11 +69,11 @@ class CommandParser:
             curr_index = curr_index + 1
 
         if len(args) > entity.number_of_args[len(entity.number_of_args) - 1]:
-            self.logger.error(f"{command}: Too many arguments provided")
+            print(f"{command}: Too many arguments provided")
             return -1
         
         if (len(args) < entity.number_of_args[0]):
-            self.logger.error(f"{command}: Too less arguments provided")
+            print(f"{command}: Too less arguments provided")
             return -1
 
         self.__parsed_command = CommandResult(entity.action, args)
